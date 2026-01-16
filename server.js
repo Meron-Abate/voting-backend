@@ -73,44 +73,53 @@ let questions = [
 
 let currentQuestionIndex = 0;
 
+// Helper: send current question
+const sendCurrentQuestion = (resetVotes = false) => {
+  const question = questions[currentQuestionIndex];
+
+  if (resetVotes) {
+    // Reset votes only when moving to next question
+    question.options.forEach(o => o.votes = 0);
+    question.userVotes = {};
+  }
+
+  io.emit("question", question); // broadcast to everyone
+};
+
 io.on("connection", (socket) => {
   console.log("User connected: " + socket.id);
 
-  // Always send the current question
-  const sendCurrentQuestion = () => {
-    const question = questions[currentQuestionIndex];
-    question.options.forEach(o => o.votes = 0); // reset votes
-    question.userVotes = {};
-    socket.emit("question", question);
-  };
-
-  sendCurrentQuestion();
+  // Send current question to this new user (do NOT reset votes)
+  socket.emit("question", questions[currentQuestionIndex]);
 
   // Handle voting
   socket.on("vote", (optionId) => {
     const question = questions[currentQuestionIndex];
     const prevVote = question.userVotes[socket.id];
 
+    // Remove previous vote
     if (prevVote) {
       const prevOption = question.options.find(o => o.id === prevVote);
       if (prevOption) prevOption.votes -= 1;
     }
 
+    // Add new vote
     const option = question.options.find(o => o.id === optionId);
     if (option) option.votes += 1;
 
+    // Update user's vote
     question.userVotes[socket.id] = optionId;
 
+    // Broadcast updated votes to all clients
     io.emit("votesUpdate", question);
   });
 
   // Handle next question
   socket.on("nextQuestion", () => {
     currentQuestionIndex++;
-    if (currentQuestionIndex >= questions.length) {
-      currentQuestionIndex = 0; // loop to first question
-    }
-    sendCurrentQuestion();
+    if (currentQuestionIndex >= questions.length) currentQuestionIndex = 0;
+
+    sendCurrentQuestion(true); // reset votes for new question
   });
 
   socket.on("disconnect", () => console.log("User disconnected: " + socket.id));
