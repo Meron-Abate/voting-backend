@@ -12,7 +12,7 @@ const io = new Server(server, {
   cors: { origin: "*" },
 });
 
-// 5 Sample Questions
+// Sample Questions
 let questions = [
   {
     id: 1,
@@ -76,63 +76,45 @@ let currentQuestionIndex = 0;
 io.on("connection", (socket) => {
   console.log("User connected: " + socket.id);
 
-  // Ensure currentQuestionIndex is valid
-  if (currentQuestionIndex >= questions.length) {
-    currentQuestionIndex = 0;
-  }
+  // Always send the current question
+  const sendCurrentQuestion = () => {
+    const question = questions[currentQuestionIndex];
+    question.options.forEach(o => o.votes = 0); // reset votes
+    question.userVotes = {};
+    socket.emit("question", question);
+  };
 
-  // Send current question immediately
-  socket.emit("question", questions[currentQuestionIndex]);
+  sendCurrentQuestion();
 
-  // Handle voting (users can change vote anytime)
+  // Handle voting
   socket.on("vote", (optionId) => {
     const question = questions[currentQuestionIndex];
     const prevVote = question.userVotes[socket.id];
 
-    // Remove previous vote
     if (prevVote) {
       const prevOption = question.options.find(o => o.id === prevVote);
       if (prevOption) prevOption.votes -= 1;
     }
 
-    // Add new vote
     const option = question.options.find(o => o.id === optionId);
     if (option) option.votes += 1;
 
-    // Update user's vote
     question.userVotes[socket.id] = optionId;
 
-    // Broadcast updated votes
     io.emit("votesUpdate", question);
   });
 
-  // Handle Next Question
+  // Handle next question
   socket.on("nextQuestion", () => {
     currentQuestionIndex++;
-
-    // Loop back to first question after the last one
     if (currentQuestionIndex >= questions.length) {
-      currentQuestionIndex = 0;
+      currentQuestionIndex = 0; // loop to first question
     }
-
-    const question = questions[currentQuestionIndex];
-
-    // Safety check
-    if (!question) {
-      console.log("Warning: question is undefined!");
-      return;
-    }
-
-    // Reset votes for new question
-    question.options.forEach(o => o.votes = 0);
-    question.userVotes = {};
-
-    io.emit("question", question);
+    sendCurrentQuestion();
   });
 
   socket.on("disconnect", () => console.log("User disconnected: " + socket.id));
 });
 
 const PORT = process.env.PORT || 5000;
-
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
