@@ -8,9 +8,7 @@ app.use(cors());
 
 const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: { origin: "*" },
-});
+const io = new Server(server, { cors: { origin: "*" } });
 
 // Sample Questions
 let questions = [
@@ -72,57 +70,76 @@ let questions = [
 ];
 
 let currentQuestionIndex = 0;
+let hostId = null;
+let gameStarted = false;
 
-// Helper: send current question
 const sendCurrentQuestion = (resetVotes = false) => {
   const question = questions[currentQuestionIndex];
-
   if (resetVotes) {
-    // Reset votes only when moving to next question
     question.options.forEach(o => o.votes = 0);
     question.userVotes = {};
   }
-
-  io.emit("question", question); // broadcast to everyone
+  io.emit("question", question);
 };
 
 io.on("connection", (socket) => {
-  console.log("User connected: " + socket.id);
+  console.log("User connected:", socket.id);
 
-  // Send current question to this new user (do NOT reset votes)
-  socket.emit("question", questions[currentQuestionIndex]);
+  // Send current question if game started
+  if (gameStarted) {
+    socket.emit("question", questions[currentQuestionIndex]);
+  }
 
-  // Handle voting
+  // Host setup
+  socket.on("setHost", (pin) => {
+    const HOST_PIN = "1234"; // your host PIN
+    if (pin === HOST_PIN && !hostId) {
+      hostId = socket.id;
+      gameStarted = true;
+      console.log("Host connected:", hostId);
+      socket.emit("hostConfirmed");
+      sendCurrentQuestion(true); // start first question
+    } else {
+      socket.emit("hostDenied");
+    }
+  });
+
+  // Voting
   socket.on("vote", (optionId) => {
+    if (!gameStarted) return;
     const question = questions[currentQuestionIndex];
     const prevVote = question.userVotes[socket.id];
 
-    // Remove previous vote
     if (prevVote) {
       const prevOption = question.options.find(o => o.id === prevVote);
       if (prevOption) prevOption.votes -= 1;
     }
 
-    // Add new vote
     const option = question.options.find(o => o.id === optionId);
     if (option) option.votes += 1;
 
-    // Update user's vote
     question.userVotes[socket.id] = optionId;
 
-    // Broadcast updated votes to all clients
     io.emit("votesUpdate", question);
   });
 
-  // Handle next question
+  // Only host can move to next question
   socket.on("nextQuestion", () => {
+    if (socket.id !== hostId) return;
     currentQuestionIndex++;
     if (currentQuestionIndex >= questions.length) currentQuestionIndex = 0;
-
-    sendCurrentQuestion(true); // reset votes for new question
+    sendCurrentQuestion(true);
   });
 
-  socket.on("disconnect", () => console.log("User disconnected: " + socket.id));
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+    if (socket.id === hostId) {
+      console.log("Host disconnected. Next question control lost.");
+      hostId = null;
+      gameStarted = false;
+      io.emit("gamePaused");
+    }
+  });
 });
 
 const PORT = process.env.PORT || 5000;
