@@ -76,7 +76,12 @@ let currentQuestionIndex = 0;
 io.on("connection", (socket) => {
   console.log("User connected: " + socket.id);
 
-  // Send current question
+  // Ensure currentQuestionIndex is valid
+  if (currentQuestionIndex >= questions.length) {
+    currentQuestionIndex = 0;
+  }
+
+  // Send current question immediately
   socket.emit("question", questions[currentQuestionIndex]);
 
   // Handle voting (users can change vote anytime)
@@ -104,12 +109,20 @@ io.on("connection", (socket) => {
   // Handle Next Question
   socket.on("nextQuestion", () => {
     currentQuestionIndex++;
+
+    // Loop back to first question after the last one
     if (currentQuestionIndex >= questions.length) {
-      io.emit("gameOver"); // Notify frontend game ended
-      return;
+      currentQuestionIndex = 0;
     }
 
     const question = questions[currentQuestionIndex];
+
+    // Safety check
+    if (!question) {
+      console.log("Warning: question is undefined!");
+      return;
+    }
+
     // Reset votes for new question
     question.options.forEach(o => o.votes = 0);
     question.userVotes = {};
