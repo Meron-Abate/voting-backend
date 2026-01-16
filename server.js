@@ -29,37 +29,217 @@ const io = new Server(server, {
 let questions = [
   {
     id: 1,
-    question: "Who is most likely to survive a zombie apocalypse?",
+    question: "Who controls the office playlist?",
     options: [
-      { id: 1, name: "Alice", votes: 0 },
-      { id: 2, name: "Bob", votes: 0 },
-      { id: 3, name: "Charlie", votes: 0 },
-      { id: 4, name: "Diana", votes: 0 },
+      { id: 1, name: "Natty", votes: 0 },
+      { id: 2, name: "Bereket Zenebew", votes: 0 },
+      { id: 3, name: "Ekram", votes: 0 },
+      { id: 4, name: "Minte", votes: 0 },
     ],
     userVotes: {}
   },
   {
     id: 2,
-    question: "Who tells the funniest jokes?",
+    question: "Who secretly knows everything happening?",
     options: [
-      { id: 1, name: "Alice", votes: 0 },
-      { id: 2, name: "Bob", votes: 0 },
-      { id: 3, name: "Charlie", votes: 0 },
-      { id: 4, name: "Diana", votes: 0 },
+      { id: 1, name: "Michu", votes: 0 },
+      { id: 2, name: "Daniel Abayneh", votes: 0 },
+      { id: 3, name: "Dinberu Getachew", votes: 0 },
+      { id: 4, name: "Selam", votes: 0 },
     ],
     userVotes: {}
   },
   {
     id: 3,
-    question: "Who is most likely to become famous?",
+    question: "What actually Powers Eternal?",
     options: [
-      { id: 1, name: "Alice", votes: 0 },
-      { id: 2, name: "Bob", votes: 0 },
-      { id: 3, name: "Charlie", votes: 0 },
-      { id: 4, name: "Diana", votes: 0 },
+      { id: 1, name: "Coffee", votes: 0 },
+      { id: 2, name: "Areqe", votes: 0 },
+      { id: 3, name: "Deadlines", votes: 0 },
+      { id: 4, name: "Cheru Medehaniyalem", votes: 0 },
     ],
     userVotes: {}
-  }
+  },
+  {
+    id: 4,
+    question: "Always on their Phone?",
+    options: [
+      { id: 1, name: "Tobel", votes: 0 },
+      { id: 2, name: "Yemaneh", votes: 0 },
+      { id: 3, name: "Yonan", votes: 0 },
+      { id: 4, name: "Barni", votes: 0 },
+    ],
+    userVotes: {}
+  },
+  {
+    id: 5,
+    question: "Adjusts screens to perfection, every time",
+    options: [
+      { id: 1, name: "Eyuel Mesfin", votes: 0 },
+      { id: 2, name: "Natnael Womdemagegne", votes: 0 },
+      { id: 3, name: "Ephrem Mohammed", votes: 0 },
+      { id: 4, name: "Yemaneh Yetbarek", votes: 0 },
+    ],
+    userVotes: {}
+  },
+  {
+    id: 6,
+    question: "The king/queen of gambling (cards, office bets,  etc.) ",
+    options: [
+      { id: 1, name: "Mente", votes: 0 },
+      { id: 2, name: "Selam", votes: 0 },
+      { id: 3, name: "Yonan", votes: 0 },
+      { id: 4, name: "Henok Abayneh", votes: 0 },
+    ],
+    userVotes: {}
+  },
+  
+    {
+    id: 7,
+    question: "Most likely to audit your lunch expenses",
+    options: [
+      { id: 1, name: "Abiyu Teketel", votes: 0 },
+    ],
+    userVotes: {}
+  },
+
+    {
+    id: 8,
+    question: "Always missing something, but somehow saves the day anyway",
+    options: [
+      { id: 1, name: "Biniyam Event", votes: 0 },
+      { id: 2, name: "Natnael Demeke", votes: 0 },
+      { id: 3, name: "Beabsew", votes: 0 },
+      
+    ],
+    userVotes: {}
+  },
+    {
+    id: 9,
+    question: "The one that hates being on camera",
+    options: [
+      { id: 1, name: "Mente", votes: 0 },
+      { id: 2, name: "Meron", votes: 0 },
+      { id: 3, name: "Eskedar", votes: 0 },
+      { id: 4, name: "Dinberu Getachew", votes: 0 },
+    ],
+    userVotes: {}
+  },
+     {
+    id: 10,
+    question: "Who controls the sound, controls the vibe",
+    options: [
+      { id: 1, name: "Beabsew", votes: 0 },
+      { id: 2, name: "Bini", votes: 0 },
+      { id: 3, name: "Amen", votes: 0 },
+      { id: 4, name: "Abel", votes: 0 },
+    ],
+    userVotes: {}
+  },
+
+      {
+    id: 11,
+    question: "Fashionably on point",
+    options: [
+      { id: 1, name: "Michu", votes: 0 },
+      { id: 2, name: "Yonathan Birhanu", votes: 0 },
+      { id: 3, name: "Yonan", votes: 0 },
+      { id: 4, name: "Natnael Demeke", votes: 0 },
+    ],
+    userVotes: {}
+  },
+    {
+    id: 12,
+    question: "Coolest Energy in the room",
+    options: [
+      { id: 1, name: "Ted", votes: 0 },
+      { id: 2, name: "DInberu", votes: 0 },
+      { id: 3, name: "Barni", votes: 0 },
+      { id: 4, name: "Eskedar", votes: 0 },
+    ],
+    userVotes: {}
+  },
+    {
+    id: 13,
+    question: "The one who always Hangovers",
+    options: [
+      { id: 1, name: "Biniyam Fantahun", votes: 0 },
+      { id: 2, name: "Natnael Demeke", votes: 0 },
+      { id: 3, name: "Mankila", votes: 0 },
+    ],
+    userVotes: {}
+  },
+    {
+    id: 14,
+    question: "Master of Chill ( Founders Edition)",
+    options: [
+      { id: 1, name: "Dinberu", votes: 0 },
+      { id: 2, name: "Yoni", votes: 0 },
+      { id: 3, name: "Abiyu", votes: 0 },
+      { id: 4, name: "G Man", votes: 0 },
+    ],
+    userVotes: {}
+  },
+    {
+    id: 15,
+    question: "Chief Complaint Officer",
+    options: [
+      { id: 1, name: "Wende", votes: 0 },
+      { id: 2, name: "Ephrem Shimeles", votes: 0 },
+      { id: 3, name: "Abiy Teketel", votes: 0 },
+    ],
+    userVotes: {}
+  },
+
+      {
+    id: 16,
+    question: "The calmest in the middle of madness",
+    options: [
+      { id: 1, name: "Ephrem Mohammed", votes: 0 },
+      { id: 2, name: "Natnael WOmdenagegn", votes: 0 },
+      { id: 3, name: "Abiy Yetebarek", votes: 0 },
+      { id: 4, name: "Biruk Ashagre", votes: 0 },
+    ],
+    userVotes: {}
+  },
+    {
+    id: 17,
+    question: "Who spends so long rendering, they forget what day it is",
+    options: [
+      { id: 1, name: "Dani Addis", votes: 0 },
+      { id: 2, name: "Abenezer Zerihun", votes: 0 },
+      { id: 3, name: "Leuelseged", votes: 0 },
+      { id: 4, name: "Eyouel", votes: 0 },
+    ],
+    userVotes: {}
+  },
+
+    {
+    id: 18,
+    question: "Who is always there, but hardly noticed",
+    options: [
+      { id: 1, name: "Lamrot", votes: 0 },
+      { id: 2, name: "Kidus Desalign", votes: 0 },
+      { id: 3, name: "Bereket Dereje", votes: 0 },
+      { id: 4, name: "Betelehem Girma", votes: 0 },
+    ],
+    userVotes: {}
+  },
+    {
+    id: 19,
+    question: "Who controls the sound, controls the vibe",
+    options: [
+      { id: 1, name: "Beabsew", votes: 0 },
+      { id: 2, name: "Bini", votes: 0 },
+      { id: 3, name: "Amen", votes: 0 },
+      { id: 4, name: "ABel", votes: 0 },
+    ],
+    userVotes: {}
+  },
+
+ 
+  
+
 ];
 
 let currentQuestionIndex = 0;
