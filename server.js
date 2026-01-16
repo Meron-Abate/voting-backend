@@ -5,17 +5,24 @@ const cors = require("cors");
 const { Server } = require("socket.io");
 
 const app = express();
-app.use(cors()); // just in case you need standard API routes later
+
+// Express-level CORS (for any REST routes you may add)
+app.use(cors({
+  origin: "https://eternalchristmas.netlify.app",
+  methods: ["GET", "POST"],
+  credentials: true
+}));
 
 const server = http.createServer(app);
 
-// --- Socket.IO with proper CORS ---
+// --- Socket.IO with proper CORS and transports ---
 const io = new Server(server, {
   cors: {
-    origin: ["https://eternalchristmas.netlify.app"], // <-- replace with your frontend URL
+    origin: "https://eternalchristmas.netlify.app",
     methods: ["GET", "POST"],
     credentials: true
-  }
+  },
+  transports: ["websocket", "polling"] // enable polling for Render/Netlify compatibility
 });
 
 // --- Sample Questions ---
@@ -52,29 +59,7 @@ let questions = [
       { id: 4, name: "Diana", votes: 0 },
     ],
     userVotes: {}
-  },
-  {
-    id: 4,
-    question: "Who is most likely to eat dessert first?",
-    options: [
-      { id: 1, name: "Alice", votes: 0 },
-      { id: 2, name: "Bob", votes: 0 },
-      { id: 3, name: "Charlie", votes: 0 },
-      { id: 4, name: "Diana", votes: 0 },
-    ],
-    userVotes: {}
-  },
-  {
-    id: 5,
-    question: "Who is the most adventurous?",
-    options: [
-      { id: 1, name: "Alice", votes: 0 },
-      { id: 2, name: "Bob", votes: 0 },
-      { id: 3, name: "Charlie", votes: 0 },
-      { id: 4, name: "Diana", votes: 0 },
-    ],
-    userVotes: {}
-  },
+  }
 ];
 
 let currentQuestionIndex = 0;
@@ -95,14 +80,12 @@ const sendCurrentQuestion = (resetVotes = false) => {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // If game already started, send current question
-  if (gameStarted) {
-    socket.emit("question", questions[currentQuestionIndex]);
-  }
+  // Send current question if game already started
+  if (gameStarted) socket.emit("question", questions[currentQuestionIndex]);
 
   // --- Host setup ---
   socket.on("setHost", (pin) => {
-    const HOST_PIN = "1234"; // Change this to your desired PIN
+    const HOST_PIN = "1234"; // Change to your desired PIN
     if (pin === HOST_PIN && !hostId) {
       hostId = socket.id;
       gameStarted = true;
@@ -121,40 +104,35 @@ io.on("connection", (socket) => {
     const question = questions[currentQuestionIndex];
     const prevVote = question.userVotes[socket.id];
 
-    // Remove previous vote if exists
     if (prevVote) {
       const prevOption = question.options.find(o => o.id === prevVote);
       if (prevOption) prevOption.votes -= 1;
     }
 
-    // Add new vote
     const option = question.options.find(o => o.id === optionId);
     if (option) option.votes += 1;
 
     question.userVotes[socket.id] = optionId;
 
-    // Broadcast updated votes
     io.emit("votesUpdate", question);
   });
 
   // --- Next Question (host only) ---
   socket.on("nextQuestion", () => {
-    if (socket.id !== hostId) return; // Only host can move to next question
+    if (socket.id !== hostId) return;
 
     currentQuestionIndex++;
-    if (currentQuestionIndex >= questions.length) currentQuestionIndex = 0; // loop back to first question
+    if (currentQuestionIndex >= questions.length) currentQuestionIndex = 0;
     sendCurrentQuestion(true);
   });
 
-  // --- Handle disconnect ---
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
-
     if (socket.id === hostId) {
       console.log("Host disconnected. Game paused.");
       hostId = null;
       gameStarted = false;
-      io.emit("gamePaused"); // notify players
+      io.emit("gamePaused");
     }
   });
 });
