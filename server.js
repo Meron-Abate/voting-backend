@@ -8,11 +8,8 @@ const app = express();
 
 // Express-level CORS
 app.use(cors({
-origin: [
-    "https://eternalchristmas.netlify.app",
-    "https://eternalchristmasholiday.vercel.app"
-  ],
-    methods: ["GET", "POST"],
+  origin: "https://eternalchristmas.netlify.app",
+  methods: ["GET", "POST"],
   credentials: true
 }));
 
@@ -21,10 +18,7 @@ const server = http.createServer(app);
 // Socket.IO
 const io = new Server(server, {
   cors: {
-origin: [
-      "https://eternalchristmas.netlify.app",
-      "https://eternalchristmasholiday.vercel.app"
-    ],
+    origin: "https://eternalchristmas.netlify.app",
     methods: ["GET", "POST"],
     credentials: true
   },
