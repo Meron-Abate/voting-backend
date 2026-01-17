@@ -6,7 +6,7 @@ const { Server } = require("socket.io");
 
 const app = express();
 
-// Express-level CORS (for any REST routes you may add)
+// Express-level CORS
 app.use(cors({
   origin: "https://eternalchristmas.netlify.app",
   methods: ["GET", "POST"],
@@ -15,17 +15,17 @@ app.use(cors({
 
 const server = http.createServer(app);
 
-// --- Socket.IO with proper CORS and transports ---
+// Socket.IO
 const io = new Server(server, {
   cors: {
     origin: "https://eternalchristmas.netlify.app",
     methods: ["GET", "POST"],
     credentials: true
   },
-  transports: ["websocket", "polling"] // enable polling for Render/Netlify compatibility
+  transports: ["websocket", "polling"]
 });
 
-// --- Sample Questions ---
+// --- Questions (your full list unchanged) ---
 let questions = [
   {
     id: 1,
@@ -246,13 +246,38 @@ let currentQuestionIndex = 0;
 let hostId = null;
 let gameStarted = false;
 
-// --- Helper: Send current question to all clients ---
+// --- Helper: determine winner safely + tie breaker ---
+function getWinnerWithTieBreaker(question) {
+  const options = question.options;
+
+  // 1. Find highest vote count
+  const maxVotes = Math.max(...options.map(o => o.votes));
+
+  // 2. Get all options that have that vote count
+  const topCandidates = options.filter(o => o.votes === maxVotes);
+
+  // If only one winner → return normally
+  if (topCandidates.length === 1) {
+    return topCandidates[0];
+  }
+
+  // --- Tie breaker logic ---
+  // Pick a RANDOM winner among tied options
+  const randomIndex = Math.floor(Math.random() * topCandidates.length);
+  const selectedWinner = topCandidates[randomIndex];
+
+  return selectedWinner;
+}
+
+// --- Send question (reset votes if needed) ---
 const sendCurrentQuestion = (resetVotes = false) => {
   const question = questions[currentQuestionIndex];
+
   if (resetVotes) {
     question.options.forEach(o => o.votes = 0);
     question.userVotes = {};
   }
+
   io.emit("question", question);
 };
 
@@ -260,18 +285,19 @@ const sendCurrentQuestion = (resetVotes = false) => {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // Send current question if game already started
-  if (gameStarted) socket.emit("question", questions[currentQuestionIndex]);
+  if (gameStarted) {
+    socket.emit("question", questions[currentQuestionIndex]);
+  }
 
-  // --- Host setup ---
+  // --- Host authentication ---
   socket.on("setHost", (pin) => {
-    const HOST_PIN = "1234"; // Change to your desired PIN
+    const HOST_PIN = "1234";
+
     if (pin === HOST_PIN && !hostId) {
       hostId = socket.id;
       gameStarted = true;
-      console.log("Host connected:", hostId);
       socket.emit("hostConfirmed");
-      sendCurrentQuestion(true); // Start first question
+      sendCurrentQuestion(true);
     } else {
       socket.emit("hostDenied");
     }
@@ -282,13 +308,15 @@ io.on("connection", (socket) => {
     if (!gameStarted) return;
 
     const question = questions[currentQuestionIndex];
-    const prevVote = question.userVotes[socket.id];
 
-    if (prevVote) {
+    // Remove previous vote by this user
+    const prevVote = question.userVotes[socket.id];
+    if (prevVote !== undefined) {
       const prevOption = question.options.find(o => o.id === prevVote);
       if (prevOption) prevOption.votes -= 1;
     }
 
+    // Add new vote
     const option = question.options.find(o => o.id === optionId);
     if (option) option.votes += 1;
 
@@ -297,19 +325,36 @@ io.on("connection", (socket) => {
     io.emit("votesUpdate", question);
   });
 
-  // --- Next Question (host only) ---
+  // --- Next Question ---
   socket.on("nextQuestion", () => {
     if (socket.id !== hostId) return;
 
+    const currentQuestion = questions[currentQuestionIndex];
+
+    // Determine winner using tie-breaker
+    const winner = getWinnerWithTieBreaker(currentQuestion);
+
+    // Broadcast final winner before moving on
+    io.emit("finalWinner", {
+      questionId: currentQuestion.id,
+      question: currentQuestion.question,
+      winner
+    });
+
+    // Move to next question
     currentQuestionIndex++;
-    if (currentQuestionIndex >= questions.length) currentQuestionIndex = 0;
+    if (currentQuestionIndex >= questions.length) {
+      currentQuestionIndex = 0;
+    }
+
     sendCurrentQuestion(true);
   });
 
+  // --- Disconnect Handling ---
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
+
     if (socket.id === hostId) {
-      console.log("Host disconnected. Game paused.");
       hostId = null;
       gameStarted = false;
       io.emit("gamePaused");
